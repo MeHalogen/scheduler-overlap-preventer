@@ -1,108 +1,57 @@
 # scheduler-overlap-preventer
 
-A lightweight, zero-dependency, TypeScript-first utility to prevent overlapping executions of scheduled tasks or async functions in Node.js.
+> **Why use scheduler-overlap-preventer?**
+> Standard `setInterval` runs tasks blindly based on clock time. If an asynchronous task (like a database backup or API sync) takes longer than the interval time, multiple execution cycles run concurrently. This leads to race conditions, double operations, memory leaks, and database locks.
 
-## Installation
+This library enforces a mutex-like single-concurrency lock on interval tasks. It guarantees that the next execution cycle will only start *after* the previous async promise resolves, safely delaying overlapping runs.
 
+---
+
+## ⚡ Features
+* **Mutex lock for async intervals and timers**
+* **Prevents concurrent executions of overlapping runs**
+* **Configurable queueing or dropping of overlapping executions**
+* **Detailed event logging hook for delayed tasks**
+* **TypeScript-first ESM with correct typings**
+
+---
+
+## 📦 Installation
 ```bash
-npm install scheduler-overlap-preventer
+npm i scheduler-overlap-preventer
 ```
 
-## Features
-* **Single Concurrency Execution**: Wrap any asynchronous function to guarantee it never executes concurrently.
-* **Flexible Overlap Strategies**: Configure what happens when a task overlaps:
-  * `'skip'` (default): Silently skip the execution and return `undefined`.
-  * `'queue'`: Queue the latest invocation to run after the active run completes (buffers exactly one execution, overwriting previous ones).
-  * `'reject'`: Reject the returned promise with an error immediately.
-* **Overlap & Error Hooks**: Get notified on overlap occurrences or task failures.
-* **Interval Scheduler**: A lightweight wrapper around `setTimeout` that runs intervals sequentially without overlapping.
-* **Zero Dependencies**: Highly performant and small footprint.
+---
 
-## Usage
+## 🚀 Usage
+```javascript
+import { preventOverlap, OverlapScheduler } from 'scheduler-overlap-preventer';
 
-### 1. Simple Function Wrapper (`skip` strategy)
-
-```typescript
-import { preventOverlap } from 'scheduler-overlap-preventer';
-
-const runTask = preventOverlap(async () => {
+// Example 1: Basic Wrapper
+const safeTask = preventOverlap(async () => {
   console.log('Task started...');
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  console.log('Task finished.');
-}, {
-  strategy: 'skip',
-  onOverlap: ({ strategy }) => console.warn(`Overlap detected! Handled with: ${strategy}`)
+  await new Promise(r => setTimeout(r, 2000)); // Simulating long task
+  console.log('Task completed.');
 });
 
-// Run task twice concurrently
-runTask(); // Executes
-runTask(); // Overlaps, prints: Overlap detected! Handled with: skip
+// Even if called multiple times rapidly, it only executes one at a time
+setInterval(safeTask, 500);
 ```
 
-### 2. Queueing Strategy
+---
 
-Queues the last execution to run after the active one completes.
+## ⚙️ API Reference
+### preventOverlap(fn, options?)
+* `fn`: `() => Promise<any>` - The async function to guard.
+* `options`: `{ onOverlap?: () => void }` - Callback when overlap is prevented.
+* Returns a guarded async function.
 
-```typescript
-import { preventOverlap } from 'scheduler-overlap-preventer';
+---
 
-const processQueue = preventOverlap(async (id: number) => {
-  console.log(`Processing ${id}`);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-}, { strategy: 'queue' });
+## 📺 Demonstration
+![Terminal Demo](./demo.gif)
 
-processQueue(1); // Runs immediately
-processQueue(2); // Queued
-processQueue(3); // Overwrites 2 in the queue buffer
+---
 
-// Output:
-// Processing 1
-// (1 second later...)
-// Processing 3
-```
-
-### 3. Reject Strategy
-
-Rejects the promise if execution overlaps.
-
-```typescript
-import { preventOverlap } from 'scheduler-overlap-preventer';
-
-const criticalTask = preventOverlap(async () => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-}, { strategy: 'reject' });
-
-criticalTask().catch(err => {
-  // Overlapping execution rejected.
-});
-```
-
-### 4. Overlap Scheduler
-
-A lightweight interval scheduling wrapper.
-
-```typescript
-import { OverlapScheduler } from 'scheduler-overlap-preventer';
-
-const scheduler = new OverlapScheduler(
-  async () => {
-    // Perform database cleanup or health check
-    await new Promise(resolve => setTimeout(resolve, 5000));
-  },
-  {
-    intervalMs: 1000, // Trigger run every 1 second
-    strategy: 'skip',
-    onError: (err) => console.error('Task failed', err)
-  }
-);
-
-// Start the scheduler
-scheduler.start();
-
-// ... later:
-scheduler.stop();
-```
-
-## License
-
-MIT
+## 📄 License
+MIT License.

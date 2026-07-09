@@ -1,6 +1,6 @@
 {
   "name": "scheduler-overlap-preventer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Single-concurrency task scheduling wrapper for Node.js to prevent overlapping runs.",
   "type": "module",
   "main": "./dist/index.js",
