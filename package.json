@@ -1,6 +1,6 @@
 {
   "name": "scheduler-overlap-preventer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Single-concurrency task scheduling wrapper for Node.js to prevent overlapping runs.",
   "type": "module",
   "main": "./dist/index.js",
@@ -31,5 +31,13 @@
   "devDependencies": {
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MeHalogen/scheduler-overlap-preventer.git"
+  },
+  "homepage": "https://github.com/MeHalogen/scheduler-overlap-preventer#readme",
+  "bugs": {
+    "url": "https://github.com/MeHalogen/scheduler-overlap-preventer/issues"
   }
 }
